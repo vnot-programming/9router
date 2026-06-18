@@ -36,8 +36,10 @@ MenuItem.propTypes = {
 export default function HeaderMenu({ onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
   const [shutdownOpen, setShutdownOpen] = useState(false);
   const [isShuttingDown, setIsShuttingDown] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const { toggleTheme, isDark } = useTheme();
   const menuRef = useRef(null);
 
@@ -90,6 +92,11 @@ export default function HeaderMenu({ onLogout }) {
               onClick={() => { toggleTheme(); close(); }}
             />
             <MenuItem
+              icon="system_update"
+              label="Update"
+              onClick={() => { close(); setUpdateOpen(true); }}
+            />
+            <MenuItem
               icon="power_settings_new"
               label="Shutdown"
               danger
@@ -106,6 +113,30 @@ export default function HeaderMenu({ onLogout }) {
       </div>
 
       <ChangelogModal isOpen={changelogOpen} onClose={() => setChangelogOpen(false)} />
+      
+      <ConfirmModal
+        isOpen={updateOpen}
+        onClose={() => { if (!isUpdating) setUpdateOpen(false); }}
+        onConfirm={async () => {
+          if (isUpdating) return;
+          setIsUpdating(true);
+          try {
+            await fetch("/api/auto-update", { method: "POST" });
+            setTimeout(() => {
+              window.location.reload();
+            }, 60000); // Automatically reload after 1 minute
+          } catch (e) {
+            setIsUpdating(false);
+          }
+        }}
+        title="Update 9Router"
+        message={isUpdating ? "Updating in background... Please wait ~1 to 3 minutes. The page will reload automatically when done." : "This will automatically pull the latest master branch and rebuild the Docker container in the background. Are you sure?"}
+        confirmText={isUpdating ? "Updating..." : "Start Update"}
+        cancelText={isUpdating ? "" : "Cancel"}
+        variant="primary"
+        loading={isUpdating}
+      />
+
       <ConfirmModal
         isOpen={shutdownOpen}
         onClose={() => setShutdownOpen(false)}
