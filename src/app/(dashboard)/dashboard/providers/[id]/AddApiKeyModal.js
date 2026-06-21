@@ -4,6 +4,7 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { Button, Badge, Input, Modal, Select } from "@/shared/components";
 import { AI_PROVIDERS } from "@/shared/constants/providers";
+import { translate } from "@/i18n/runtime";
 
 const BULK_PLACEHOLDER = `name1|sk-key1\nname2|sk-key2\nsk-key-only-auto-named`;
 
@@ -100,10 +101,10 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
       if (data.success) {
         handleValidate();
       } else {
-        alert("Failed to agree: " + data.error);
+        alert(translate("Failed to agree:") + " " + data.error);
       }
     } catch (e) {
-      alert("Error: " + e.message);
+      alert(translate("Error:") + " " + e.message);
     } finally {
       setAgreeing(false);
     }
@@ -308,9 +309,9 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
         )}
         {validationResult === "agreement_required" && (
           <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded text-sm text-yellow-600 dark:text-yellow-400 mt-2">
-            <p className="mb-2"><strong>Action Required:</strong> Cloudflare mensyaratkan Anda untuk menyetujui Meta's Terms of Service untuk Llama 3.2 sebelum digunakan.</p>
+            <p className="mb-2"><strong>{translate("Action Required:")}</strong> {translate("Cloudflare requires you to agree to Meta's Terms of Service for Llama 3.2 before using it.")}</p>
             <Button size="sm" onClick={handleAgreeToTerms} disabled={agreeing} variant="primary">
-              {agreeing ? "Menyetujui..." : "Setujui Syarat & Ketentuan"}
+              {agreeing ? translate("Processing...") : translate("Agree to Terms & Conditions")}
             </Button>
           </div>
         )}

@@ -92,12 +92,12 @@ export default function ProviderDetailPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setModelsTestError("");
-        alert("Persetujuan ToS Cloudflare AI berhasil. Silakan coba kembali uji model.");
+        alert(translate("Cloudflare AI ToS agreement successful. Please try testing the model again."));
       } else {
-        setModelsTestError(data.error || "Gagal menyetujui syarat & ketentuan.");
+        setModelsTestError(data.error || translate("Failed to agree to terms & conditions."));
       }
     } catch (err) {
-      setModelsTestError("Terjadi kesalahan jaringan saat mencoba menyetujui ToS.");
+      setModelsTestError(translate("A network error occurred while trying to agree to ToS."));
     } finally {
       setIsAgreeing(false);
     }
@@ -1560,9 +1560,9 @@ export default function ProviderDetailPage() {
                     onClick={handleAgreeToTerms} 
                     disabled={isAgreeing} 
                     className="bg-yellow-500 hover:bg-yellow-600 text-black border-none"
-                    title={translate("Click to Agree Syarat & Ketentuan")}
+                    title={translate("Click to Agree Terms & Conditions")}
                   >
-                    {isAgreeing ? translate("Memproses...") : translate("Setujui Syarat & Ketentuan")}
+                    {isAgreeing ? translate("Processing...") : translate("Agree to Terms & Conditions")}
                   </Button>
                 )}
                 {disabledModelIds.length > 0 && (
@@ -1585,7 +1585,7 @@ export default function ProviderDetailPage() {
             {modelsTestError.includes("Model Agreement") && (
               <div className="flex p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                 <p className="text-xs text-yellow-500">
-                  {translate("Anda belum menyetujui Syarat & Ketentuan dari Meta Llama 3.2 untuk menggunakan model ini di Cloudflare AI.")}
+                  {translate("You have not agreed to the Terms & Conditions of Meta Llama 3.2 to use this model on Cloudflare AI.")}
                 </p>
               </div>
             )}
