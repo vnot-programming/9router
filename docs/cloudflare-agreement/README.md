@@ -26,6 +26,10 @@ Jika pengguna mencoba menambahkan model Cloudflare secara spesifik yang belum ad
 ### 4. Internationalization (i18n) Support
 Seluruh teks peringatan, tombol persetujuan ToS, dan notifikasi UI (*alert*) yang menyertai fitur ini telah diintegrasikan dengan sistem bahasa 9router (`@/i18n/runtime`). Implementasi ini memastikan konsistensi penggunaan _English base strings_ untuk fungsionalitas `translate()`, sehingga dukungan *multilingual* tidak rusak ketika *user* mengganti bahasa (seperti dari *English* ke *Indonesia*).
 
+### 5. Smart Cooldown Lock Clearance (Penghancuran *Cache Penalty*)
+Jika koneksi API gagal akibat *error 403 Model Agreement*, mekanisme proteksi bawaan 9router (`testUtils.js` dan `auth.js`) akan secara otomatis mengunci penggunaan model terkait (menambahkan *key* `modelLock_...` ke dalam *database* koneksi) selama waktu tertentu (misalnya 10 detik hingga beberapa menit) untuk mencegah *spam request*. 
+Untuk menghindari masalah di mana pengguna sudah menekan "Agree" namun masih ditolak oleh sistem internal 9router (muncul pesan `reset after 1m 13s`), *endpoint* persetujuan `/api/providers/cloudflare-agree/route.js` kini telah dibekali logika pembersihan. Segera setelah Cloudflare mengembalikan respons sukses, 9router akan secara proaktif menghapus parameter `lastError`, mengosongkan `errorCode`, dan menghancurkan semua histori `modelLock_...` pada koneksi tersebut. Sehingga, model dapat langsung di-test kembali tanpa menunggu waktu penalti habis.
+
 ## Struktur File Berubah
 - `src/app/api/providers/validate/route.js` (Modifikasi: Parser Error Model Agreement & Hardcode model validation check)
 - `src/app/api/providers/[id]/test/testUtils.js` (Modifikasi: Parser Error untuk background jobs & testing)
