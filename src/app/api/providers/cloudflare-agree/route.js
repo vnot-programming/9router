@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getProviderConnections } from "open-sse/config/providers.js";
+import { getProviderConnections } from "@/models";
 
 export async function POST(request) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request) {
 
     if (!targetAccountId || !targetApiKey) {
       if (connectionId) {
-        const connections = getProviderConnections("cloudflare-ai");
+        const connections = await getProviderConnections({ provider: "cloudflare-ai" });
         const connection = connections.find(c => c.id === connectionId);
         if (connection && connection.providerSpecificData?.accountId) {
           targetAccountId = connection.providerSpecificData.accountId;
