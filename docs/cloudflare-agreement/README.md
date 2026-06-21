@@ -13,18 +13,27 @@ Untuk mempermudah User Experience, 9router telah dilengkapi fitur persetujuan To
 5. **Sukses:** Jika persetujuan diterima, koneksi API secara otomatis tervalidasi sukses tanpa pengguna perlu masuk ke CLI / terminal sama sekali.
 
 ### 2. Available Models List Integration (Test Model)
-Jika *user* (yang sudah mendaftarkan koneksinya) masuk ke menu detail provider dan menekan ikon **Test (🧪)** pada model `llama-3.2-11b-vision-instruct`, dan Cloudflare merespons dengan error 403 `Model Agreement`, maka UI akan memunculkan:
+Jika *user* (yang sudah mendaftarkan koneksinya) masuk ke menu detail provider dan menekan ikon **Test (🧪)** pada model `llama-3.2-11b-vision-instruct` (atau model yang dibatasi lainnya), dan Cloudflare merespons dengan error 403 `Model Agreement`, maka UI akan memunculkan:
 1. Pesan error spesifik (merah).
-2. Kotak peringatan kuning cerdas beserta tombol **"Setujui Syarat & Ketentuan"**.
+2. Kotak peringatan kuning cerdas di *header section* beserta tombol **"Setujui Syarat & Ketentuan"**.
 Tombol ini secara otomatis menggunakan kredensial koneksi aktif (*backend database*) untuk mengirim permintaan `/api/providers/cloudflare-agree`, sehingga pengguna tidak perlu mengetik ulang API Key mereka.
 
-### 3. Backend Programmatic Agreement
+### 3. Custom Model Integration (Add Custom Model)
+Jika pengguna mencoba menambahkan model Cloudflare secara spesifik yang belum ada di *list default* (misal: `cf/@cf/meta/llama-3.2-11b-vision-instruct`) lewat *modal window* **"Add Custom Model"**, kemudian menekan tombol **"Test"**, sistem juga akan menangkap *error 403* tersebut.
+- *Modal* tersebut akan langsung memunculkan UI Peringatan yang sama beserta tombol **"Setujui Syarat & Ketentuan"**.
+- Karena ID Provider (*connection ID*) sudah dilempar ke dalam *modal*, pengguna bisa langsung menyetujui ToS di tempat tanpa perlu menutup *modal* tersebut, kemudian langsung menekan **"Test"** kembali untuk memvalidasi ketersediaan model tersebut.
+
+### 4. Internationalization (i18n) Support
+Seluruh teks peringatan, tombol persetujuan ToS, dan notifikasi UI (*alert*) yang menyertai fitur ini telah diintegrasikan dengan sistem bahasa 9router (`@/i18n/runtime`). Implementasi ini memastikan konsistensi penggunaan _English base strings_ untuk fungsionalitas `translate()`, sehingga dukungan *multilingual* tidak rusak ketika *user* mengganti bahasa (seperti dari *English* ke *Indonesia*).
 
 ## Struktur File Berubah
-- `src/app/api/providers/validate/route.js` (Modifikasi: Parser Error Model Agreement)
-- `src/app/api/providers/[id]/test/testUtils.js` (Modifikasi: Parser Error untuk background jobs)
-- `src/app/(dashboard)/dashboard/providers/[id]/AddApiKeyModal.js` (Modifikasi: Penambahan Tombol ToS UI)
+- `src/app/api/providers/validate/route.js` (Modifikasi: Parser Error Model Agreement & Hardcode model validation check)
+- `src/app/api/providers/[id]/test/testUtils.js` (Modifikasi: Parser Error untuk background jobs & testing)
+- `src/app/(dashboard)/dashboard/providers/[id]/AddApiKeyModal.js` (Modifikasi: Penambahan Tombol ToS UI & Dukungan i18n)
+- `src/app/(dashboard)/dashboard/providers/[id]/page.js` (Modifikasi: Tombol persetujuan ToS cerdas di header *Available Models*, injeksi *providerId*, & Dukungan i18n)
+- `src/app/(dashboard)/dashboard/providers/[id]/AddCustomModelModal.js` (Modifikasi: Deteksi error 403 saat test model kustom & integrasi tombol persetujuan ToS)
 - `src/app/api/providers/cloudflare-agree/route.js` (Baru: Endpoint eksekusi persetujuan)
+
 
 
 ## Final Configuration
