@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 import { Button, Modal } from "@/shared/components";
 import { translate } from "@/i18n/runtime";
 
-export default function AddCustomModelModal({ isOpen, providerId, providerAlias, providerDisplayAlias, onSave, onClose }) {
+export default function AddCustomModelModal({ isOpen, activeConnectionId, providerAlias, providerDisplayAlias, onSave, onClose }) {
   const [modelId, setModelId] = useState("");
   const [testStatus, setTestStatus] = useState(null); // null | "testing" | "ok" | "error"
   const [testError, setTestError] = useState("");
@@ -18,13 +18,16 @@ export default function AddCustomModelModal({ isOpen, providerId, providerAlias,
   }, [isOpen]);
 
   const handleAgreeToTerms = async () => {
-    if (!providerId) return;
+    if (!activeConnectionId) {
+      alert(translate("No active connection found to perform agreement. Please ensure you have an active connection."));
+      return;
+    }
     setAgreeing(true);
     try {
       const res = await fetch("/api/providers/cloudflare-agree", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId }),
+        body: JSON.stringify({ connectionId: activeConnectionId }),
       });
       const data = await res.json();
       if (res.ok && data.success) {

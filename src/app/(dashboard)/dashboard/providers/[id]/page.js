@@ -1670,7 +1670,7 @@ export default function ProviderDetailPage() {
       {!isCompatible && (
         <AddCustomModelModal
           isOpen={showAddCustomModel}
-          providerId={params?.id}
+          activeConnectionId={connections.find(c => c.isActive !== false)?.id}
           providerAlias={providerStorageAlias}
           providerDisplayAlias={providerDisplayAlias}
           onSave={async (modelId) => {

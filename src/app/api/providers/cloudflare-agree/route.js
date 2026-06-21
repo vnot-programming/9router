@@ -29,7 +29,7 @@ export async function POST(request) {
     const res = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${targetApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ prompt: "agree" }),
