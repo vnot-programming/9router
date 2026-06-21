@@ -71,7 +71,37 @@ export default function ProviderDetailPage() {
   const [oneByOneSummary, setOneByOneSummary] = useState(null);
   const stopOneByOneRef = useRef(false);
   const [importingQoderModels, setImportingQoderModels] = useState(false);
+  const [isAgreeing, setIsAgreeing] = useState(false);
   const { copied, copy } = useCopyToClipboard();
+
+  const handleAgreeToTerms = async () => {
+    if (isAgreeing) return;
+    const activeConnection = connections.find(c => c.isActive !== false);
+    if (!activeConnection) {
+      setModelsTestError("No active connection to agree with.");
+      return;
+    }
+    setIsAgreeing(true);
+    setModelsTestError("");
+    try {
+      const res = await fetch("/api/providers/cloudflare-agree", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ connectionId: activeConnection.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setModelsTestError("");
+        alert("Persetujuan ToS Cloudflare AI berhasil. Silakan coba kembali uji model.");
+      } else {
+        setModelsTestError(data.error || "Gagal menyetujui syarat & ketentuan.");
+      }
+    } catch (err) {
+      setModelsTestError("Terjadi kesalahan jaringan saat mencoba menyetujui ToS.");
+    } finally {
+      setIsAgreeing(false);
+    }
+  };
 
   const AG_RISK_STORAGE_KEY = "ag_risk_confirmed";
 
@@ -1539,7 +1569,19 @@ export default function ProviderDetailPage() {
           })()}
         </div>
         {!!modelsTestError && (
-          <p className="text-xs text-red-500 mb-3 break-words">{modelsTestError}</p>
+          <div className="mb-3">
+            <p className="text-xs text-red-500 break-words mb-2">{modelsTestError}</p>
+            {modelsTestError.includes("Model Agreement") && (
+              <div className="flex justify-end p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs text-yellow-500">Anda belum menyetujui Syarat & Ketentuan dari Meta Llama 3.2 untuk menggunakan model ini di Cloudflare AI.</p>
+                  <Button size="sm" onClick={handleAgreeToTerms} disabled={isAgreeing} className="bg-yellow-500 hover:bg-yellow-600 text-black">
+                    {isAgreeing ? "Memproses..." : "Setujui Syarat & Ketentuan"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
         {renderModelsSection()}
       </Card>
