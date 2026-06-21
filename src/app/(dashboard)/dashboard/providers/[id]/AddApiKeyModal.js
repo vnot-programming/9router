@@ -41,6 +41,7 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
   const [validating, setValidating] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [agreeing, setAgreeing] = useState(false);
   const [mode, setMode] = useState("single"); // "single" | "bulk"
   const [bulkText, setBulkText] = useState("");
   const [bulkResult, setBulkResult] = useState(null); // { success, failed }
@@ -75,11 +76,36 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
         body: JSON.stringify({ provider, apiKey: formData.apiKey, providerSpecificData: buildProviderSpecificData() }),
       });
       const data = await res.json();
-      setValidationResult(data.valid ? "success" : "failed");
+      if (data.error === "MODEL_AGREEMENT_REQUIRED") {
+        setValidationResult("agreement_required");
+      } else {
+        setValidationResult(data.valid ? "success" : "failed");
+      }
     } catch {
       setValidationResult("failed");
     } finally {
       setValidating(false);
+    }
+  };
+
+  const handleAgreeToTerms = async () => {
+    setAgreeing(true);
+    try {
+      const res = await fetch("/api/providers/cloudflare-agree", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId: cloudflareData.accountId, apiKey: formData.apiKey }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        handleValidate();
+      } else {
+        alert("Failed to agree: " + data.error);
+      }
+    } catch (e) {
+      alert("Error: " + e.message);
+    } finally {
+      setAgreeing(false);
     }
   };
 
@@ -104,10 +130,17 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
           body: JSON.stringify({ provider, apiKey: formData.apiKey, providerSpecificData: buildProviderSpecificData() }),
         });
         const data = await res.json();
+        if (data.error === "MODEL_AGREEMENT_REQUIRED") {
+          setValidationResult("agreement_required");
+          isValid = false;
+          throw new Error("Agreement Required");
+        }
         isValid = !!data.valid;
         setValidationResult(isValid ? "success" : "failed");
-      } catch {
-        setValidationResult("failed");
+      } catch (err) {
+        if (err.message !== "Agreement Required") {
+          setValidationResult("failed");
+        }
       } finally {
         setValidating(false);
       }
@@ -268,10 +301,18 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
             Leave blank to use <code>http://localhost:11434</code>. For remote Ollama, enter the full host URL (e.g. <code>http://192.168.1.10:11434</code>).
           </p>
         )}
-        {validationResult && (
+        {validationResult && validationResult !== "agreement_required" && (
           <Badge variant={validationResult === "success" ? "success" : "error"}>
             {validationResult === "success" ? "Valid" : "Invalid"}
           </Badge>
+        )}
+        {validationResult === "agreement_required" && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded text-sm text-yellow-600 dark:text-yellow-400 mt-2">
+            <p className="mb-2"><strong>Action Required:</strong> Cloudflare mensyaratkan Anda untuk menyetujui Meta's Terms of Service untuk Llama 3.2 sebelum digunakan.</p>
+            <Button size="sm" onClick={handleAgreeToTerms} disabled={agreeing} variant="primary">
+              {agreeing ? "Menyetujui..." : "Setujui Syarat & Ketentuan"}
+            </Button>
+          </div>
         )}
         {error && (
           <p className="text-xs text-red-500 break-words">{error}</p>

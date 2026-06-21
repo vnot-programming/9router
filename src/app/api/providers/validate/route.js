@@ -197,6 +197,23 @@ export async function POST(request) {
             max_tokens: 1,
           }),
         });
+
+        if (cfRes.status === 403) {
+          try {
+            const cfData = await cfRes.json();
+            const rawMsg = cfData?.errors?.[0]?.message || "";
+            if (rawMsg.includes("Model Agreement")) {
+              return NextResponse.json({
+                valid: false,
+                error: "MODEL_AGREEMENT_REQUIRED",
+                rawMessage: rawMsg,
+              });
+            }
+          } catch (e) {
+            // Ignore JSON parse errors
+          }
+        }
+
         isValid = cfRes.status !== 401 && cfRes.status !== 403 && cfRes.status !== 404;
         return NextResponse.json({
           valid: isValid,
