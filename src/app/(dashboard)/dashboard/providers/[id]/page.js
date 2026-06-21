@@ -1544,7 +1544,7 @@ export default function ProviderDetailPage() {
       <Card>
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold">
-            {"Available Models"}
+            {translate("Available Models")}
           </h2>
           {!isCompatible && (() => {
             const allIds = [
@@ -1554,14 +1554,25 @@ export default function ProviderDetailPage() {
             const activeIds = allIds.filter((id) => !disabledModelIds.includes(id));
             return (
               <div className="flex gap-2">
+                {modelsTestError?.includes("Model Agreement") && (
+                  <Button 
+                    size="sm" 
+                    onClick={handleAgreeToTerms} 
+                    disabled={isAgreeing} 
+                    className="bg-yellow-500 hover:bg-yellow-600 text-black border-none"
+                    title={translate("Click to Agree Syarat & Ketentuan")}
+                  >
+                    {isAgreeing ? translate("Memproses...") : translate("Setujui Syarat & Ketentuan")}
+                  </Button>
+                )}
                 {disabledModelIds.length > 0 && (
                   <Button size="sm" variant="secondary" icon="restart_alt" onClick={handleEnableAll}>
-                    Active All
+                    {translate("Active All")}
                   </Button>
                 )}
                 {activeIds.length > 0 && (
                   <Button size="sm" variant="secondary" icon="block" onClick={() => handleDisableAll(activeIds)}>
-                    Disable All
+                    {translate("Disable All")}
                   </Button>
                 )}
               </div>
@@ -1572,13 +1583,10 @@ export default function ProviderDetailPage() {
           <div className="mb-3">
             <p className="text-xs text-red-500 break-words mb-2">{modelsTestError}</p>
             {modelsTestError.includes("Model Agreement") && (
-              <div className="flex justify-end p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                <div className="flex flex-col gap-2">
-                  <p className="text-xs text-yellow-500">Anda belum menyetujui Syarat & Ketentuan dari Meta Llama 3.2 untuk menggunakan model ini di Cloudflare AI.</p>
-                  <Button size="sm" onClick={handleAgreeToTerms} disabled={isAgreeing} className="bg-yellow-500 hover:bg-yellow-600 text-black">
-                    {isAgreeing ? "Memproses..." : "Setujui Syarat & Ketentuan"}
-                  </Button>
-                </div>
+              <div className="flex p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                <p className="text-xs text-yellow-500">
+                  {translate("Anda belum menyetujui Syarat & Ketentuan dari Meta Llama 3.2 untuk menggunakan model ini di Cloudflare AI.")}
+                </p>
               </div>
             )}
           </div>
