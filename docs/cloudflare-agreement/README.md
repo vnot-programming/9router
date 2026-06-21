@@ -12,8 +12,24 @@ Untuk mempermudah User Experience, 9router telah dilengkapi fitur persetujuan To
 4. **Persetujuan Latar Belakang:** Ketika diklik, tombol tersebut menembak *endpoint* baru `/api/providers/cloudflare-agree/route.js` dengan mengirimkan payload JSON `{ prompt: "agree" }` menggunakan kredensial Account ID dan API Token milik pengguna.
 5. **Sukses:** Jika persetujuan diterima, koneksi API secara otomatis tervalidasi sukses tanpa pengguna perlu masuk ke CLI / terminal sama sekali.
 
+### 2. Available Models List Integration (Test Model)
+Jika *user* (yang sudah mendaftarkan koneksinya) masuk ke menu detail provider dan menekan ikon **Test (🧪)** pada model `llama-3.2-11b-vision-instruct`, dan Cloudflare merespons dengan error 403 `Model Agreement`, maka UI akan memunculkan:
+1. Pesan error spesifik (merah).
+2. Kotak peringatan kuning cerdas beserta tombol **"Setujui Syarat & Ketentuan"**.
+Tombol ini secara otomatis menggunakan kredensial koneksi aktif (*backend database*) untuk mengirim permintaan `/api/providers/cloudflare-agree`, sehingga pengguna tidak perlu mengetik ulang API Key mereka.
+
+### 3. Backend Programmatic Agreement
+
 ## Struktur File Berubah
 - `src/app/api/providers/validate/route.js` (Modifikasi: Parser Error Model Agreement)
 - `src/app/api/providers/[id]/test/testUtils.js` (Modifikasi: Parser Error untuk background jobs)
 - `src/app/(dashboard)/dashboard/providers/[id]/AddApiKeyModal.js` (Modifikasi: Penambahan Tombol ToS UI)
 - `src/app/api/providers/cloudflare-agree/route.js` (Baru: Endpoint eksekusi persetujuan)
+
+
+## Final Configuration
+Lakukan proses Build Docker anda:
+```bash
+cd /path/to/9router
+docker compose up --build -d
+```
