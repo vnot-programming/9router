@@ -389,7 +389,7 @@ async function testApiKeyConnection(connection, effectiveProxy = null) {
         const res = await fetchWithConnectionProxy(url, {
           method: "POST",
           headers: { "Authorization": `Bearer ${connection.apiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ model: getDefaultModel("cloudflare-ai"), messages: [{ role: "user", content: "test" }], max_tokens: 1 }),
+          body: JSON.stringify({ model: "@cf/meta/llama-3.2-11b-vision-instruct", messages: [{ role: "user", content: "test" }], max_tokens: 1 }),
         }, effectiveProxy);
 
         if (res.status === 403) {

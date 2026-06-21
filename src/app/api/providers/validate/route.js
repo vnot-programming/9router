@@ -192,7 +192,7 @@ export async function POST(request) {
           method: "POST",
           headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: getDefaultModel("cloudflare-ai"),
+            model: "@cf/meta/llama-3.2-11b-vision-instruct",
             messages: [{ role: "user", content: "test" }],
             max_tokens: 1,
           }),
