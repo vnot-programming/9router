@@ -1,0 +1,23 @@
+version: '3.8'
+
+# ─────────────────────────────────────────────────────────────────
+# 9Router — Docker Compose Configuration (Local Build)
+# Port: 20128
+# Data: /home/vnot/docker/9router/data
+# ─────────────────────────────────────────────────────────────────
+
+services:
+  9router:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: 9router
+    env_file:
+      - .env
+    ports:
+      - "20128:20128"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

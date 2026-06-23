@@ -3,17 +3,46 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Button, Modal } from "@/shared/components";
+import { translate } from "@/i18n/runtime";
 
-export default function AddCustomModelModal({ isOpen, providerAlias, providerDisplayAlias, onSave, onClose }) {
+export default function AddCustomModelModal({ isOpen, activeConnectionId, providerAlias, providerDisplayAlias, onSave, onClose }) {
   const [modelId, setModelId] = useState("");
   const [testStatus, setTestStatus] = useState(null); // null | "testing" | "ok" | "error"
   const [testError, setTestError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [agreeing, setAgreeing] = useState(false);
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) { setModelId(""); setTestStatus(null); setTestError(""); }
   }, [isOpen]);
+
+  const handleAgreeToTerms = async () => {
+    if (!activeConnectionId) {
+      alert(translate("No active connection found to perform agreement. Please ensure you have an active connection."));
+      return;
+    }
+    setAgreeing(true);
+    try {
+      const res = await fetch("/api/providers/cloudflare-agree", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ connectionId: activeConnectionId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTestError("");
+        setTestStatus(null);
+        alert(translate("Cloudflare AI ToS agreement successful. Please try testing the model again."));
+      } else {
+        alert(translate("Failed to agree:") + " " + (data.error || ""));
+      }
+    } catch (err) {
+      alert(translate("Error:") + " " + err.message);
+    } finally {
+      setAgreeing(false);
+    }
+  };
 
   // Strip provider's own alias prefix (e.g. "cc/model" -> "model" for cc provider)
   const stripAlias = (id) => {
@@ -94,9 +123,19 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
           </div>
         )}
         {testStatus === "error" && (
-          <div className="flex items-start gap-2 text-sm text-red-500">
-            <span className="material-symbols-outlined text-base shrink-0">cancel</span>
-            <span>{testError || "Model not reachable"}</span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start gap-2 text-sm text-red-500">
+              <span className="material-symbols-outlined text-base shrink-0">cancel</span>
+              <span>{testError || "Model not reachable"}</span>
+            </div>
+            {testError?.includes("Model Agreement") && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded text-sm text-yellow-600 dark:text-yellow-400">
+                <p className="mb-2"><strong>{translate("Action Required:")}</strong> {translate("Cloudflare requires you to agree to Meta's Terms of Service for Llama 3.2 before using it.")}</p>
+                <Button size="sm" onClick={handleAgreeToTerms} disabled={agreeing} variant="primary">
+                  {agreeing ? translate("Processing...") : translate("Agree to Terms & Conditions")}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
