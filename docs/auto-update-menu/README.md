@@ -5,6 +5,8 @@
 
 This document explains the architecture behind the Auto-Update UI button and how it safely communicates with the host environment to trigger a `docker compose build` without deadlocking the Next.js container.
 
+![Auto-Update Menu UI](./image.png)
+
 ## 1. The Problem
 A standard Docker container cannot easily rebuild or restart itself from the inside. If the Next.js API tries to run a bash script to `git pull` and `docker compose build`, the container might be forcefully killed halfway through the execution, leaving the application in a corrupted state or resulting in a failed build.
 
@@ -109,8 +111,9 @@ class WebhookHandler(http.server.SimpleHTTPRequestHandler):
         script = f'''
         cd {PROJECT_PATH}
         git stash
-        git checkout master
-        git pull origin master
+        git checkout vnot-production
+        git fetch origin
+        git merge origin/master -m "Auto-merge upstream updates"
         git stash pop || true
         docker compose up -d --build
         docker system prune -f
