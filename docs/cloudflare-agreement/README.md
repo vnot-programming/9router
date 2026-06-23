@@ -1,47 +1,47 @@
-# Fitur Cloudflare One-Click Model Agreement
+# Cloudflare One-Click Model Agreement Feature
 
-## Latar Belakang
-Model Llama 3.2 Vision dari Meta di-host oleh Cloudflare Workers AI. Cloudflare mensyaratkan setiap pengguna (setiap Cloudflare Account ID) untuk secara eksplisit menyetujui *Terms of Service* (ToS) Meta sebelum model ini dapat digunakan (memunculkan error HTTP 403 `Model Agreement`).
+## Background
+Meta's Llama 3.2 Vision model is hosted by Cloudflare Workers AI. Cloudflare requires every user (each Cloudflare Account ID) to explicitly agree to Meta's *Terms of Service* (ToS) before this model can be used (returns HTTP 403 error `Model Agreement`).
 
-## Cara Kerja Baru (One-Click Agreement)
-Untuk mempermudah User Experience, 9router telah dilengkapi fitur persetujuan ToS cerdas:
+## New Mechanism (One-Click Agreement)
+To improve User Experience, 9router has been equipped with a smart ToS agreement feature:
 
-1. **Deteksi Error Cerdas:** Saat pengguna melakukan *Add API Key* atau menguji *Test Connection*, endpoint `/api/providers/validate/route.js` dan `testUtils.js` tidak lagi menganggap `403` sebagai kegagalan validasi *invalid credentials* murni. API akan mengurai JSON Error yang dikembalikan oleh Cloudflare.
-2. **Pemicu Khusus:** Jika JSON error mengandung frasa `"Model Agreement"`, status khusus `MODEL_AGREEMENT_REQUIRED` akan dikembalikan ke frontend.
-3. **UI Responsif:** Komponen `AddApiKeyModal.js` di dashboard akan mendeteksi status ini dan secara dinamis memunculkan tombol **"Setujui Syarat & Ketentuan"**.
-4. **Persetujuan Latar Belakang:** Ketika diklik, tombol tersebut menembak *endpoint* baru `/api/providers/cloudflare-agree/route.js` dengan mengirimkan payload JSON `{ prompt: "agree" }` menggunakan kredensial Account ID dan API Token milik pengguna.
-5. **Sukses:** Jika persetujuan diterima, koneksi API secara otomatis tervalidasi sukses tanpa pengguna perlu masuk ke CLI / terminal sama sekali.
+1. **Smart Error Detection:** When a user performs *Add API Key* or tests the connection (*Test Connection*), the `/api/providers/validate/route.js` and `testUtils.js` endpoints no longer treat `403` as a pure *invalid credentials* validation failure. The API will parse the JSON Error returned by Cloudflare.
+2. **Specific Trigger:** If the JSON error contains the phrase `"Model Agreement"`, a special status `MODEL_AGREEMENT_REQUIRED` will be returned to the frontend.
+3. **Responsive UI:** The `AddApiKeyModal.js` component in the dashboard will detect this status and dynamically display an **"Agree to Terms & Conditions"** button.
+4. **Background Agreement:** When clicked, the button hits the new endpoint `/api/providers/cloudflare-agree/route.js` by sending a JSON payload `{ prompt: "agree" }` using the user's Account ID and API Token credentials.
+5. **Success:** If the agreement is accepted, the API connection is automatically validated as successful without the user needing to access the CLI / terminal at all.
 
 ### 2. Available Models List Integration (Test Model)
-Jika *user* (yang sudah mendaftarkan koneksinya) masuk ke menu detail provider dan menekan ikon **Test (🧪)** pada model `llama-3.2-11b-vision-instruct` (atau model yang dibatasi lainnya), dan Cloudflare merespons dengan error 403 `Model Agreement`, maka UI akan memunculkan:
-1. Pesan error spesifik (merah).
-2. Kotak peringatan kuning cerdas di *header section* beserta tombol **"Setujui Syarat & Ketentuan"**.
-Tombol ini secara otomatis menggunakan kredensial koneksi aktif (*backend database*) untuk mengirim permintaan `/api/providers/cloudflare-agree`, sehingga pengguna tidak perlu mengetik ulang API Key mereka.
+If a *user* (who has already registered their connection) goes to the provider detail menu and clicks the **Test (🧪)** icon on the `llama-3.2-11b-vision-instruct` model (or other restricted models), and Cloudflare responds with a 403 `Model Agreement` error, the UI will display:
+1. A specific error message (red).
+2. A smart yellow warning box in the *header section* along with an **"Agree to Terms & Conditions"** button.
+This button automatically uses the active connection credentials (*backend database*) to send a request to `/api/providers/cloudflare-agree`, so users do not need to retype their API Key.
 
 ### 3. Custom Model Integration (Add Custom Model)
-Jika pengguna mencoba menambahkan model Cloudflare secara spesifik yang belum ada di *list default* (misal: `cf/@cf/meta/llama-3.2-11b-vision-instruct`) lewat *modal window* **"Add Custom Model"**, kemudian menekan tombol **"Test"**, sistem juga akan menangkap *error 403* tersebut.
-- *Modal* tersebut akan langsung memunculkan UI Peringatan yang sama beserta tombol **"Setujui Syarat & Ketentuan"**.
-- Karena ID Provider (*connection ID*) sudah dilempar ke dalam *modal*, pengguna bisa langsung menyetujui ToS di tempat tanpa perlu menutup *modal* tersebut, kemudian langsung menekan **"Test"** kembali untuk memvalidasi ketersediaan model tersebut.
+If a user tries to specifically add a Cloudflare model that is not yet in the *default list* (e.g., `cf/@cf/meta/llama-3.2-11b-vision-instruct`) via the **"Add Custom Model"** *modal window*, then clicks the **"Test"** button, the system will also catch the *403 error*.
+- The *modal* will immediately display the same Warning UI along with the **"Agree to Terms & Conditions"** button.
+- Since the Provider ID (*connection ID*) is already passed into the *modal*, the user can directly agree to the ToS on the spot without needing to close the *modal*, and then immediately click **"Test"** again to validate the availability of the model.
 
 ### 4. Internationalization (i18n) Support
-Seluruh teks peringatan, tombol persetujuan ToS, dan notifikasi UI (*alert*) yang menyertai fitur ini telah diintegrasikan dengan sistem bahasa 9router (`@/i18n/runtime`). Implementasi ini memastikan konsistensi penggunaan _English base strings_ untuk fungsionalitas `translate()`, sehingga dukungan *multilingual* tidak rusak ketika *user* mengganti bahasa (seperti dari *English* ke *Indonesia*).
+All warning texts, ToS agreement buttons, and UI notifications (*alerts*) accompanying this feature have been integrated with the 9router language system (`@/i18n/runtime`). This implementation ensures the consistent use of _English base strings_ for the `translate()` functionality, so *multilingual* support is not broken when the *user* changes the language (e.g., from *English* to *Indonesia*).
 
-### 5. Smart Cooldown Lock Clearance (Penghancuran *Cache Penalty*)
-Jika koneksi API gagal akibat *error 403 Model Agreement*, mekanisme proteksi bawaan 9router (`testUtils.js` dan `auth.js`) akan secara otomatis mengunci penggunaan model terkait (menambahkan *key* `modelLock_...` ke dalam *database* koneksi) selama waktu tertentu (misalnya 10 detik hingga beberapa menit) untuk mencegah *spam request*. 
-Untuk menghindari masalah di mana pengguna sudah menekan "Agree" namun masih ditolak oleh sistem internal 9router (muncul pesan `reset after 1m 13s`), *endpoint* persetujuan `/api/providers/cloudflare-agree/route.js` kini telah dibekali logika pembersihan. Segera setelah Cloudflare mengembalikan respons sukses, 9router akan secara proaktif menghapus parameter `lastError`, mengosongkan `errorCode`, dan menghancurkan semua histori `modelLock_...` pada koneksi tersebut. Sehingga, model dapat langsung di-test kembali tanpa menunggu waktu penalti habis.
+### 5. Smart Cooldown Lock Clearance (Cache Penalty Destruction)
+If an API connection fails due to a *403 Model Agreement error*, 9router's built-in protection mechanism (`testUtils.js` and `auth.js`) will automatically lock the use of the related model (adding a `modelLock_...` *key* to the connection *database*) for a certain period (e.g., 10 seconds to several minutes) to prevent *spam requests*. 
+To avoid the issue where a user has already clicked "Agree" but is still rejected by the internal 9router system (showing a `reset after 1m 13s` message), the agreement *endpoint* `/api/providers/cloudflare-agree/route.js` has now been equipped with clearance logic. Immediately after Cloudflare returns a success response, 9router will proactively remove the `lastError` parameter, clear `errorCode`, and destroy all `modelLock_...` history on that connection. As a result, the model can be tested again immediately without waiting for the penalty time to expire.
 
-## Struktur File Berubah
-- `src/app/api/providers/validate/route.js` (Modifikasi: Parser Error Model Agreement & Hardcode model validation check)
-- `src/app/api/providers/[id]/test/testUtils.js` (Modifikasi: Parser Error untuk background jobs & testing)
-- `src/app/(dashboard)/dashboard/providers/[id]/AddApiKeyModal.js` (Modifikasi: Penambahan Tombol ToS UI & Dukungan i18n)
-- `src/app/(dashboard)/dashboard/providers/[id]/page.js` (Modifikasi: Tombol persetujuan ToS cerdas di header *Available Models*, injeksi *providerId*, & Dukungan i18n)
-- `src/app/(dashboard)/dashboard/providers/[id]/AddCustomModelModal.js` (Modifikasi: Deteksi error 403 saat test model kustom & integrasi tombol persetujuan ToS)
-- `src/app/api/providers/cloudflare-agree/route.js` (Baru: Endpoint eksekusi persetujuan)
+## Changed File Structure
+- `src/app/api/providers/validate/route.js` (Modified: Model Agreement Error Parser & Hardcode model validation check)
+- `src/app/api/providers/[id]/test/testUtils.js` (Modified: Error Parser for background jobs & testing)
+- `src/app/(dashboard)/dashboard/providers/[id]/AddApiKeyModal.js` (Modified: ToS UI Button addition & i18n Support)
+- `src/app/(dashboard)/dashboard/providers/[id]/page.js` (Modified: Smart ToS agreement button in *Available Models* header, *providerId* injection, & i18n Support)
+- `src/app/(dashboard)/dashboard/providers/[id]/AddCustomModelModal.js` (Modified: 403 error detection during custom model test & ToS agreement button integration)
+- `src/app/api/providers/cloudflare-agree/route.js` (New: Agreement execution endpoint)
 
 
 
 ## Final Configuration
-Lakukan proses Build Docker anda:
+Run your Docker Build process:
 ```bash
 cd /path/to/9router
 docker compose up --build -d
