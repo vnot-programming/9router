@@ -75,10 +75,18 @@ export default function Sidebar({ onClose }) {
     return pathname.startsWith(href);
   };
 
-  // Open manual update panel (no countdown yet — user must click Copy to trigger shutdown)
-  const handleUpdate = () => {
+  // Trigger auto-update in background via /api/auto-update webhook
+  const handleUpdate = async () => {
     setShowUpdateModal(false);
     setIsUpdating(true);
+    try {
+      await fetch("/api/auto-update", { method: "POST" });
+      setTimeout(() => {
+        window.location.reload();
+      }, 60000); // Automatically reload after 1 minute
+    } catch (e) {
+      setIsUpdating(false);
+    }
   };
 
   // Triggered by Copy button inside ManualUpdatePanel: copy + countdown + shutdown
@@ -357,10 +365,11 @@ export default function Sidebar({ onClose }) {
         onClose={() => setShowUpdateModal(false)}
         onConfirm={handleUpdate}
         title="Update 9Router"
-        message={`Show install command for v${updateInfo?.latestVersion || ""}? You can copy it and shutdown to install manually.`}
-        confirmText="Show Command"
-        cancelText="Cancel"
+        message={isUpdating ? "Updating in background... Please wait ~1 to 3 minutes. The page will reload automatically when done." : "This will automatically pull the latest master branch and rebuild the Docker container in the background. Are you sure?"}
+        confirmText={isUpdating ? "Updating..." : "Start Update"}
+        cancelText={isUpdating ? "" : "Cancel"}
         variant="primary"
+        loading={isUpdating}
       />
 
       {/* Disconnected / Updating Overlay */}
